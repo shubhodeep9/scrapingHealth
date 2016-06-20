@@ -72,7 +72,22 @@ func secondPage(baseuri string) {
 	fmt.Println(ge)
 }
 
+func thirdPage(baseuri string) {
+	doc, err := goquery.NewDocument(baseuri + "/calories-nutrition/usda/baked-beans")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	nutritionSummary := make(map[string]string)
+	nutritionSummary["Calories"] = doc.Find(".fact").Eq(0).Find(".factValue").Text()
+	nutritionSummary["Fat"] = doc.Find(".fact").Eq(1).Find(".factValue").Text()
+	nutritionSummary["Carbs"] = doc.Find(".fact").Eq(2).Find(".factValue").Text()
+	nutritionSummary["Protein"] = doc.Find(".fact").Eq(3).Find(".factValue").Text()
+	nutritionSummary["Description"] = doc.Find(".generic .spaced").Eq(1).Find("td").Text()
+	fmt.Println(nutritionSummary)
+}
+
 func main() {
 	baseuri := "http://www.fatsecret.com"
-	secondPage(baseuri)
+	thirdPage(baseuri)
 }

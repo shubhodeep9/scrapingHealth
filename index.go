@@ -38,18 +38,18 @@ import (
 */
 
 type totNut struct {
-	label    string  `json:"label"`
-	quantity float64 `json:"quantity"`
-	unit     string  `json:"unit"`
+	Label    string  `json:"label"`
+	Quantity float64 `json:"quantity"`
+	Unit     string  `json:"unit"`
 }
 
 type foodPar struct {
-	name           string   `json:"name"`
-	uri            string   `json:"uri"`
-	calories       int      `json:"calories"`
-	text           string   `json:"text"`
-	totalNutrients []totNut `json:"totalNutrients"`
-	totalDaily     []totNut `json:"totalDaily"`
+	Name           string   `json:"name"`
+	Uri            string   `json:"uri"`
+	Calories       int      `json:"calories"`
+	Text           string   `json:"text"`
+	TotalNutrients []totNut `json:"totalNutrients"`
+	TotalDaily     []totNut `json:"totalDaily"`
 }
 
 func mainPage(baseuri string) {
@@ -60,56 +60,54 @@ func mainPage(baseuri string) {
 
 	s := doc.Find(".generic.common")
 	var name, uri string
-	finalRet := make(map[string]map[string][]foodPar)
+	finalRet := make(map[string]map[string][]*foodPar)
 	s.Find("a").Each(func(i int, sel *goquery.Selection) {
-		if i < 4 {
-			if i%3 == 1 {
-				name = sel.Text()
-			} else if i%3 == 0 {
-				uri, _ = sel.Attr("href")
-			} else {
-				func() {
-					doc1, err := goquery.NewDocument(baseuri + uri)
-					if err != nil {
-						log.Fatal(err)
-					}
+		if i%3 == 1 {
+			name = sel.Text()
+		} else if i%3 == 0 {
+			uri, _ = sel.Attr("href")
+		} else {
+			func() {
+				doc1, err := goquery.NewDocument(baseuri + uri)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-					s := doc1.Find(".secHolder")
-					ge := make(map[string][]foodPar)
-					s.Find("h2").Each(func(i int, sel *goquery.Selection) {
-						selNext := sel.Next()
-						selNext.Find("a").Each(func(j int, sele *goquery.Selection) {
-							uri, _ = sele.Attr("href")
-							val := thirdPage(baseuri, uri)
-							ge[sel.Text()] = append(ge[sel.Text()], val)
-						})
+				s := doc1.Find(".secHolder")
+				ge := make(map[string][]*foodPar)
+				var val *foodPar
+				s.Find("h2").Each(func(i int, sel *goquery.Selection) {
+					selNext := sel.Next()
+					selNext.Find("a").Each(func(j int, sele *goquery.Selection) {
+						uri, _ = sele.Attr("href")
+						val = thirdPage(baseuri, uri)
+						ge[sel.Text()] = append(ge[sel.Text()], val)
 					})
-					fmt.Println(val)
-					finalRet[strings.Replace(name, "\u0026", "", -1)] = ge
-				}()
-			}
+				})
+				finalRet[strings.Replace(name, "\u0026", "", -1)] = ge
+			}()
 		}
 	})
-	js, _ := json.Marshal(finalRet)
+	js, _ := json.MarshalIndent(finalRet, "", "   ")
 	ioutil.WriteFile("output.json", js, 0644)
 	fmt.Println(string(js))
 }
 
-func thirdPage(baseuri, uri string) foodPar {
+func thirdPage(baseuri, uri string) *foodPar {
 	var theFood foodPar
 	var theNut, theDaily totNut
 	doc, err := goquery.NewDocument(baseuri + uri)
 	if err != nil {
 		log.Fatal(err)
 	}
-	theFood.name = doc.Find("h1").Text()
-	theFood.text = doc.Find(".generic .spaced").Eq(1).Find("td").Text()
-	theFood.uri = baseuri + uri
-	theFood.calories, _ = strconv.Atoi(doc.Find("div.factValue").Eq(0).Text())
+	theFood.Name = doc.Find("h1").Text()
+	theFood.Text = doc.Find(".generic .spaced").Eq(1).Find("td").Text()
+	theFood.Uri = baseuri + uri
+	theFood.Calories, _ = strconv.Atoi(doc.Find("div.factValue").Eq(0).Text())
 	doc.Find("td.label.borderTop").Each(func(i int, s *goquery.Selection) {
 		if i >= 2 && i < doc.Find("td.label.borderTop").Length()-2 {
 			hey := strings.Split(strings.Replace(strings.TrimSpace(s.Text()), string(9), "", -1), "\n")
-			theNut.label = hey[0]
+			theNut.Label = hey[0]
 			var val float64
 			if strings.Contains(hey[1], "mg") {
 				val, _ = strconv.ParseFloat(strings.Replace(hey[1], "mg", "", -1), 64)
@@ -121,24 +119,24 @@ func thirdPage(baseuri, uri string) foodPar {
 					val, _ = strconv.ParseFloat(strings.Replace(hey[1], "g", "", -1), 64)
 				}
 			}
-			theNut.quantity = val
-			theNut.unit = "g"
-			theFood.totalNutrients = append(theFood.totalNutrients, theNut)
+			theNut.Quantity = val
+			theNut.Unit = "g"
+			theFood.TotalNutrients = append(theFood.TotalNutrients, theNut)
 			//Now the daily percent
-			theDaily.label = hey[0]
-			theDaily.unit = "%"
+			theDaily.Label = hey[0]
+			theDaily.Unit = "%"
 			cont := s.Next().Text()
 			if strings.Contains(cont, "%") {
 				val, _ = strconv.ParseFloat(strings.Replace(strings.TrimSpace(cont), "%", "", -1), 64)
 			} else {
 				val = 0
 			}
-			theDaily.quantity = val
-			theFood.totalDaily = append(theFood.totalDaily, theDaily)
+			theDaily.Quantity = val
+			theFood.TotalDaily = append(theFood.TotalDaily, theDaily)
 		}
 	})
-	fmt.Println(theFood.name)
-	return theFood
+	fmt.Println(theFood.Name)
+	return &theFood
 
 }
 

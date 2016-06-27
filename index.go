@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/PuerkitoBio/goquery"
+	"log"
+	"strings"
 )
 
 /*
@@ -12,23 +12,17 @@ import (
     "Beans & Legumes":{
         "Baked Beans":[
             {
-                "Name": "Vegetarian Baked Beans",
-                "Nutrition summary":{
-                    "Calories":"382",
-                    "Fat":"13.03",
-                    "Carbs":"54.12",
-                    "Protein":"14.02",
-                    "Description":"There are 239 calories in 1 cup of Vegetarian Baked Beans.
-                                Calorie breakdown: 3% fat, 79% carbs, 18% protein."
-                },
-                "Common Serving Sizes":[
-                    {
-                        "Size":"1 oz",
-                        "Calories":"27"
-                    },
-                    ....
-                ],
-
+                "uri" : "http://www.fatsecret.com/calories-nutrition/usda/baked-beans",
+                "calories": 382,
+                "text":
+                "totalNutrients": {
+                	"FAT": {
+      					"label": "Fat",
+      					"quantity": 0.37910000000000005,
+      					"unit": "g"
+    				},
+     			}
+                "totalDaily":
             },
             ....
         ],
@@ -77,14 +71,14 @@ func thirdPage(baseuri string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//text := doc.Find(".generic .spaced").Eq(1).Find("td").Text()
+	doc.Find("td.label.borderTop").Each(func(i int, s *goquery.Selection) {
+		if i >= 2 && i < doc.Find("td.label.borderTop").Length()-2 {
+			hey := strings.Replace(strings.TrimSpace(s.Text()), string(9), "", -1)
+			fmt.Println(i, hey)
+		}
+	})
 
-	nutritionSummary := make(map[string]string)
-	nutritionSummary["Calories"] = doc.Find(".fact").Eq(0).Find(".factValue").Text()
-	nutritionSummary["Fat"] = doc.Find(".fact").Eq(1).Find(".factValue").Text()
-	nutritionSummary["Carbs"] = doc.Find(".fact").Eq(2).Find(".factValue").Text()
-	nutritionSummary["Protein"] = doc.Find(".fact").Eq(3).Find(".factValue").Text()
-	nutritionSummary["Description"] = doc.Find(".generic .spaced").Eq(1).Find("td").Text()
-	fmt.Println(nutritionSummary)
 }
 
 func main() {

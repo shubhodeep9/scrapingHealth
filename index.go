@@ -38,18 +38,18 @@ import (
 */
 
 type totNut struct {
-	label    string
-	quantity float64
-	unit     string
+	label    string  `json:"label"`
+	quantity float64 `json:"quantity"`
+	unit     string  `json:"unit"`
 }
 
 type foodPar struct {
-	name           string
-	uri            string
-	calories       int
-	text           string
-	totalNutrients []totNut
-	totalDaily     []totNut
+	name           string   `json:"name"`
+	uri            string   `json:"uri"`
+	calories       int      `json:"calories"`
+	text           string   `json:"text"`
+	totalNutrients []totNut `json:"totalNutrients"`
+	totalDaily     []totNut `json:"totalDaily"`
 }
 
 func mainPage(baseuri string) {
@@ -62,28 +62,32 @@ func mainPage(baseuri string) {
 	var name, uri string
 	finalRet := make(map[string]map[string][]foodPar)
 	s.Find("a").Each(func(i int, sel *goquery.Selection) {
-		if i%3 == 1 {
-			name = sel.Text()
-		} else if i%3 == 0 {
-			uri, _ = sel.Attr("href")
-		} else {
-			func() {
-				doc1, err := goquery.NewDocument(baseuri + uri)
-				if err != nil {
-					log.Fatal(err)
-				}
+		if i < 4 {
+			if i%3 == 1 {
+				name = sel.Text()
+			} else if i%3 == 0 {
+				uri, _ = sel.Attr("href")
+			} else {
+				func() {
+					doc1, err := goquery.NewDocument(baseuri + uri)
+					if err != nil {
+						log.Fatal(err)
+					}
 
-				s := doc1.Find(".secHolder")
-				ge := make(map[string][]foodPar)
-				s.Find("h2").Each(func(i int, sel *goquery.Selection) {
-					selNext := sel.Next()
-					selNext.Find("a").Each(func(j int, sele *goquery.Selection) {
-						uri, _ = sele.Attr("href")
-						ge[sel.Text()] = append(ge[sel.Text()], thirdPage(baseuri, uri))
+					s := doc1.Find(".secHolder")
+					ge := make(map[string][]foodPar)
+					s.Find("h2").Each(func(i int, sel *goquery.Selection) {
+						selNext := sel.Next()
+						selNext.Find("a").Each(func(j int, sele *goquery.Selection) {
+							uri, _ = sele.Attr("href")
+							val := thirdPage(baseuri, uri)
+							fmt.Println(val)
+							ge[sel.Text()] = append(ge[sel.Text()], val)
+						})
 					})
-				})
-				finalRet[name] = ge
-			}()
+					finalRet[strings.Replace(name, "\u0026", "", -1)] = ge
+				}()
+			}
 		}
 	})
 	js, _ := json.Marshal(finalRet)

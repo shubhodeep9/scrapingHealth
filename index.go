@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -86,6 +87,7 @@ func mainPage(baseuri string) {
 		}
 	})
 	js, _ := json.Marshal(finalRet)
+	ioutil.WriteFile("output.json", js, 0644)
 	fmt.Println(string(js))
 }
 
@@ -131,6 +133,7 @@ func thirdPage(baseuri, uri string) foodPar {
 			theFood.totalDaily = append(theFood.totalDaily, theDaily)
 		}
 	})
+	fmt.Println(theFood.name)
 	return theFood
 
 }

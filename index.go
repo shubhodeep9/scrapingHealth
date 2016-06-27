@@ -81,10 +81,10 @@ func mainPage(baseuri string) {
 						selNext.Find("a").Each(func(j int, sele *goquery.Selection) {
 							uri, _ = sele.Attr("href")
 							val := thirdPage(baseuri, uri)
-							fmt.Println(val)
 							ge[sel.Text()] = append(ge[sel.Text()], val)
 						})
 					})
+					fmt.Println(val)
 					finalRet[strings.Replace(name, "\u0026", "", -1)] = ge
 				}()
 			}
